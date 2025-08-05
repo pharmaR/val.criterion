@@ -1,0 +1,41 @@
+Package: val.criterion
+Title:
+    Tools for filtering repositories based on expressed criteria.
+Version: 0.0.0.9000
+Authors@R:
+    c(
+      person(
+        "Doug", "Kelkhoff",
+        email = "doug.kelkhoff@gmail.com",
+        role = c("aut", "cre")            
+      ),
+      person(
+        "R Validation Hub",
+        email = "r-val-hub-maintainers@lists.r-consortium.org",
+        comment = c("website" = "https://www.pharmar.org"),
+        role = c("cph")
+      )
+    )
+Description:
+    Provides high-level tools for specifying filtering criteria to use when
+    pulling packages and mechanisms of hooking into R's internal tools for
+    interfacing with package repositories to impose constraints on the
+    available packages.
+License: MIT + file LICENSE
+URL: 
+    https://pharmar.github.io/val.criterion,
+    https://github.com/pharmar/val.criterion,
+    https://pharmar.org/
+BugReports:
+    https://github.com/pharmaR/val.criterion/issues
+Imports:
+    options,
+    stats,
+    S7,
+    utils,
+    val.meter
+Remotes:
+    val.meter=github::pharmaR/val.meter
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.2
