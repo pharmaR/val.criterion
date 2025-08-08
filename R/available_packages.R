@@ -24,15 +24,22 @@
 #' library(val.meter)
 #'
 #' # simulate repository of metrics, mirroring existing available packages
-#' repo <- val.meter::random_repo()
+#' repo <- val.meter::random_repo(n = 10)
 #' options(
 #'   repos = repo,  # for the sake of example
 #'   val.criterion.repos = repo,
-#'   available_packages_filters = package_filter(
+#'   available_packages_filters = package_filter({
 #'     r_cmd_check_error_count == 0 &
-#'     percentile(downloads_total) >= 0.25
-#'   )
+#'       percentile(downloads_total) >= 0.25
+#'   })
 #' )
+#'
+#' # grab the first package that was disallowed by our filter
+#' pkgs <- available.packages()
+#' filtered_pkg <- pkgs[pkgs$Repository == "<filtered>", ][[1L]]
+#'
+#' # attempt to install it
+#' install.packages(filtered_pkg)
 #' }
 #'
 #' @export
@@ -47,7 +54,7 @@ package_filter <- local({
     cond,
     repos = opt("repos"),
     exceptions = opt("exceptions"),
-    actions = list(install = opt("install.action")),
+    actions = opt("actions"),
     quiet = opt("quiet"),
     db = function() available_metrics(repos = repos),
     add = TRUE,
@@ -73,32 +80,40 @@ package_filter <- local({
       # build our evaluation environemnt and evaluate filter expression
       db <- db[!is.na(db[, "Package"]), ]
       db <- as.data.frame(db)
-      df <- convert(class_package_matrix(metric_db), class_metric_data_frame)
-      df$Metric <- TRUE
-      df <- merge(db, df, by = c("Package", "Version", "MD5sum"), all = TRUE)
-      rownames(df) <- df[, "Package"]
+      met <- convert(class_package_matrix(metric_db), class_metric_data_frame)
+      met$Metric <- TRUE
+
+      db <- merge(db, met, by = c("Package", "Version", "MD5sum"), all = TRUE)
+      rownames(db) <- db[, "Package"]
 
       # evaluate filter
-      envir <- build_filter_envir(values = df, envir = envir)
-      df$Include <- eval(cond, envir = envir)
-      df$Include <- df$Include | df$Package %in% exceptions
+      envir <- build_filter_envir(values = db, envir = envir)
+      db$Include <- eval(cond, envir = envir)
+      db$Exception[db$Package %in% exceptions] <- "allow list"
+
+      # Remove repository field for filtered packages
+      db$OriginalRepository <- db$Repository
+      db$Repository[!db$Include] <- "<filtered>"
 
       # memoise messaging using run state so we're not too noisy
-      if ((n <- sum(!df$Include, na.rm = TRUE)) > 0) {
+      if ((n <- sum(!db$Include, na.rm = TRUE)) > 0) {
         signal_state <<- signal_filter_message(n, signal_state, quiet = quiet)
       }
 
-      # trigger actions as needed
-      actions$install(find_context(), db = df)
+      # check parent calls for hooks
+      db <- handle_actions(actions, db = db)
 
       # return expected available packages matrix format
-      df <- as.matrix(df[df$Include == "TRUE", ])
+      df <- as.matrix(db)
       invisible(df)
     }
 
-    out <- list()
-    out[[filter_name()]] <- filter
-    out$add <- TRUE
+    out <- list(add = add)
+    out[[filter_name()]] <- structure(
+      filter,
+      cond = cond,
+      class = c(filter_class(), class(filter))
+    )
 
     out
   }

@@ -43,19 +43,11 @@ Passed to the \code{quiet} parameter of individual functions where it's used.\it
 \item{envvar: }{R_VAL_CRITERION_QUIET (evaluated if possible, raw string otherwise)}
 }}
 
-\item{install.action}{\describe{
-Describe What action should be taken when a filtered package is accessed.
-\code{install} actions are taken when known package-installing functions are
-used and hook in to \code{available.packages()} to retrieve a package index.\item{default: }{\preformatted{warn_filter_exception}}
-\item{option: }{val.criterion.install.action}
-\item{envvar: }{R_VAL_CRITERION_INSTALL_ACTION (evaluated if possible, raw string otherwise)}
-}}
-
-\item{monitor}{\describe{
-A set of calls that should trigger actions. See \code{\link{default_action_calls}}
-for\item{default: }{\preformatted{default_monitored_calls}}
-\item{option: }{val.criterion.monitor}
-\item{envvar: }{R_VAL_CRITERION_MONITOR (evaluated if possible, raw string otherwise)}
+\item{actions}{\describe{
+A set of calls that should prompt actions. See \code{\link{default_actions}} for an
+example of the expected format.\item{default: }{\preformatted{default_actions()}}
+\item{option: }{val.criterion.actions}
+\item{envvar: }{R_VAL_CRITERION_ACTIONS (evaluated if possible, raw string otherwise)}
 }}
 
 }

@@ -8,7 +8,7 @@ package_filter(
   cond,
   repos = opt("repos"),
   exceptions = opt("exceptions"),
-  actions = list(install = opt("install.action")),
+  actions = opt("actions"),
   quiet = opt("quiet"),
   db = function() available_metrics(repos = repos),
   add = TRUE,
@@ -47,15 +47,22 @@ Create a Package Filter
 library(val.meter)
 
 # simulate repository of metrics, mirroring existing available packages
-repo <- val.meter::random_repo()
+repo <- val.meter::random_repo(n = 10)
 options(
   repos = repo,  # for the sake of example
   val.criterion.repos = repo,
-  available_packages_filters = package_filter(
+  available_packages_filters = package_filter({
     r_cmd_check_error_count == 0 &
-    percentile(downloads_total) >= 0.25
-  )
+      percentile(downloads_total) >= 0.25
+  })
 )
+
+# grab the first package that was disallowed by our filter
+pkgs <- available.packages()
+filtered_pkg <- pkgs[pkgs$Repository == "<filtered>", ][[1L]]
+
+# attempt to install it
+install.packages(filtered_pkg)
 }
 
 }
