@@ -61,12 +61,18 @@ package_filter <- local({
     envir = parent.frame()
   ) {
     metric_db <- db
+    self <- filter_name()
     cond <- substitute(cond)
 
     # used for messaging only on first use with set of input conditions
     signal_state <- NULL
 
-    filter <- function(db) {
+    filter <- function(
+      db = available.packages(filters = filters_until(filter = self)),
+      as = c("matrix", "data.frame")
+    ) {
+      as <- match.arg(as)
+
       if (is.function(metric_db)) {
         metric_db <- metric_db()
       } else if (is.character(metric_db) && !is.matrix(metric_db)) {
@@ -96,7 +102,7 @@ package_filter <- local({
       db$Repository[!db$Include] <- "<filtered>"
 
       # memoise messaging using run state so we're not too noisy
-      if ((n <- sum(!db$Include, na.rm = TRUE)) > 0) {
+      if (!quiet && (n <- sum(!db$Include, na.rm = TRUE)) > 0) {
         signal_state <<- signal_filter_message(n, signal_state, quiet = quiet)
       }
 
@@ -104,20 +110,30 @@ package_filter <- local({
       db <- handle_actions(actions, db = db)
 
       # return expected available packages matrix format
-      df <- as.matrix(db)
-      invisible(df)
+      if (as == "matrix") {
+        db <- as.matrix(db)
+      }
+
+      invisible(db)
     }
 
     out <- list(add = add)
-    out[[filter_name()]] <- structure(
+    out[[self]] <- structure(
       filter,
       cond = cond,
+      id = filter_id,
+      name = self,
       class = c(filter_class(), class(filter))
     )
 
     out
   }
 })
+
+active_filter <- function() {
+  filters <- getOption("available_packages_filters", list())
+  Filter(function(f) inherits(f, filter_class()), filters)[[1L]]
+}
 
 build_filter_envir <- function(
   values,
@@ -128,6 +144,20 @@ build_filter_envir <- function(
   parent.env(defaults_envir) <- envir
   value_envir <- with(values, environment())
   parent.env(value_envir) <- defaults_envir
+  value_envir
+}
+
+build_filter_term_envir <- function(
+  values = lapply(metrics(), function(m) m@title),
+  # fns = , # TODO: add handlers for helper functions to self-describe
+  envir = parent.frame()
+) {
+  values <- lapply(values, function(x) {
+    structure(x, class = c("term", class(x)))
+  })
+
+  value_envir <- as.environment(values)
+  parent.env(value_envir) <- envir
   value_envir
 }
 
@@ -187,4 +217,17 @@ available_metrics <- function(repos = opt("repos")) {
 
   # drop rows with missing Package field (used to drop `Format: ` header)
   db[!is.na(db[, "Package"]), ]
+}
+
+filters_until <- function(
+  filter,
+  ...,
+  filters = getOption("available_packages_filters", list())
+) {
+  idx <- Position(
+    function(f) f == filter,
+    names(filters),
+    nomatch = length(filters) + 1L
+  )
+  head(filters, idx - 1L)
 }

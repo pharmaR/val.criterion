@@ -34,6 +34,10 @@ Imports:
     S7,
     utils,
     val.meter
+Suggests:
+    DiagrammeR
+Config/Needs/visualization:
+    DiagrammeR
 Remotes:
     val.meter=github::pharmaR/val.meter
 Encoding: UTF-8
