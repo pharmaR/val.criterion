@@ -1,3 +1,10 @@
+#' Title
+#'
+#' @returns A data.frame
+#' @export
+#'
+#' @examples
+#' df <- default_actions()
 default_actions <- function() {
   x <- list(
     list(
