@@ -76,6 +76,12 @@ package_filter <- local({
       # define NAs in case where metric_db is missing known metrics
       metric_defaults <- as.list(rep_len(NA, length.out = length(metrics())))
       names(metric_defaults) <- names(metrics())
+      
+      if (is.na(metric_db)) {
+        db <- as.data.frame(metric_defaults)
+        db$Package <- NA_character_
+        metric_db <- db
+      }
 
       # build our evaluation environemnt and evaluate filter expression
       db <- db[!is.na(db[, "Package"]), ]
@@ -178,7 +184,14 @@ available_metric_fields <- function(repos = getOption("repos")) {
 
 #' @importFrom val.meter class_package_matrix class_metric_data_frame
 available_metrics <- function(repos = opt("repos")) {
+  if (!length(repos)) {
+    return(NA_character_)
+  }
+  
   is_metric_db <- vlapply(repos, repo_is_metric_db)
+  if (!length(is_metric_db)) {
+    return(NA_character_)
+  }
   db <- available.packages(
     repos = repos[is_metric_db],
     fields = available_metric_fields(repos = repos),
