@@ -2,15 +2,15 @@
 % Please edit documentation in R/actions.R
 \name{default_actions}
 \alias{default_actions}
-\title{Title}
+\title{Default actions}
 \usage{
 default_actions()
 }
 \value{
-A data.frame
+A data.frame with three columns: functions, arguments and actions.
 }
 \description{
-Title
+Decide what to do when some functions are called.
 }
 \examples{
 df <- default_actions()

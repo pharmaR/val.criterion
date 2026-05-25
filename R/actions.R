@@ -1,8 +1,9 @@
-#' Title
-#'
-#' @returns A data.frame
+#' Default actions
+#' 
+#' Decide what to do when some functions are called.
+#' 
+#' @returns A data.frame with three columns: functions, arguments and actions. 
 #' @export
-#'
 #' @examples
 #' df <- default_actions()
 default_actions <- function() {
