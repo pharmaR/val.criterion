@@ -18,5 +18,5 @@
 cooldown <- function(accepted = Sys.Date() - 2 * 7, ...) {
   stopifnot(is(accepted, "Date"))
   stopifnot(accepted < Sys.Date())
-  package_filter(as.Date(Date) <= accepted, ...)
+  package_filter(as.Date(Published) <= accepted, envir = environment(), ...)
 }
