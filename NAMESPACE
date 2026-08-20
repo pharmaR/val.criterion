@@ -2,6 +2,7 @@
 
 export(action_disallow)
 export(cooldown)
+export(default_actions)
 export(last_rejected)
 export(last_rejected_permit)
 export(package_filter)

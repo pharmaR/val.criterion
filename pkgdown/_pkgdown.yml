@@ -1,0 +1,84 @@
+development:
+  mode: auto
+
+url: https://pharmar.github.io/val.criterion
+template:
+  bootstrap: 5
+  theme: github-light
+  theme-dark: github-dark
+  light-switch: true
+  bslib:
+    border-color: transparent
+    border-radius: 0.15rem
+    btn-border-radius: 0.25rem
+  includes:
+    in_header: |
+      <!-- Google Translate Web Element -->
+      <script type="text/javascript">
+        function googleTranslateElementInit() {
+          new google.translate.TranslateElement(
+            {
+              pageLanguage: 'en',
+              includedLanguages: 'es,fr,de,zh-CN',
+              layout: google.translate.TranslateElement.InlineLayout.SIMPLE
+            },
+            'dropdown-translate'
+          );
+        }
+      </script>
+      <script
+        type="text/javascript"
+        src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"
+      ></script>
+
+navbar:
+  bg: primary
+  structure:
+    left:  [intro, reference, articles, tutorials, news]
+    right: [search, github, translate, lightswitch]
+  components:
+    translate:
+      icon: fa-language
+      id: translate
+      href: ""
+      aria-label: Translate
+      menu: []
+
+# minimally customized from example in
+# https://pkgdown.r-lib.org/reference/build_reference.html#figures
+figures:
+  dev: svg
+  dpi: 96
+  dev.args: []
+  fig.ext: svg
+  fig.width: 7
+  fig.height: 4
+  fig.align: center
+  fig.retina: 2
+  bg: NA
+  other.parameters: []
+
+reference:
+  - title: >
+      Package filtering
+    desc: >
+      The central tools for filtering repositories based on expressed criteria.
+  - contents:
+      - package_filter
+
+  - title: >
+      Actions
+    desc: >
+      Behaviors to apply when packages fail to meet the expressed criteria.
+  - contents:
+      - default_actions
+      - action_disallow
+      - last_rejected
+      - last_rejected_permit
+
+  - title: >
+      Execution controls
+    desc: >
+      Options to configure how `val.criterion` behaves.
+  - contents:
+      - options
