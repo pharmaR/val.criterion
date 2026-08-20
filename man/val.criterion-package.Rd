@@ -21,14 +21,9 @@ Useful links:
 \author{
 \strong{Maintainer}: Doug Kelkhoff \email{doug.kelkhoff@gmail.com}
 
-Authors:
-\itemize{
-  \item Doug Kelkhoff \email{doug.kelkhoff@gmail.com}
-}
-
 Other contributors:
 \itemize{
-  \item R Validation Hub \email{r-val-hub-maintainers@lists.r-consortium.org} (website: https://www.pharmar.org) [copyright holder]
+  \item R Validation Hub \email{r-val-hub-maintainers@lists.r-consortium.org} (https://www.pharmar.org) [copyright holder]
 }
 
 }

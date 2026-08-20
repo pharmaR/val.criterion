@@ -64,5 +64,4 @@ filtered_pkg <- pkgs[pkgs$Repository == "<filtered>", ][[1L]]
 # attempt to install it
 install.packages(filtered_pkg)
 }
-
 }

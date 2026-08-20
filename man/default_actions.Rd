@@ -7,11 +7,19 @@
 default_actions()
 }
 \value{
-A data.frame with three columns: functions, arguments and actions.
+A \code{data.frame} with three columns: functions, arguments and actions.
 }
 \description{
 Decide what to do when some functions are called.
 }
 \examples{
 df <- default_actions()
+
 }
+\seealso{
+Other actions: 
+\code{\link{action_disallow}()},
+\code{\link{last_rejected}()},
+\code{\link{last_rejected_permit}()}
+}
+\concept{actions}
