@@ -41,7 +41,7 @@
 #' # attempt to install it
 #' install.packages(filtered_pkg)
 #' }
-#'
+#' @importFrom val.meter metric_coerce
 #' @export
 package_filter <- local({
   filter_id <- 0L
@@ -60,6 +60,8 @@ package_filter <- local({
     add = TRUE,
     envir = parent.frame()
   ) {
+    force(envir)
+
     metric_db <- db
     cond <- substitute(cond)
 
@@ -77,17 +79,28 @@ package_filter <- local({
       metric_defaults <- as.list(rep_len(NA, length.out = length(metrics())))
       names(metric_defaults) <- names(metrics())
 
-      # build our evaluation environemnt and evaluate filter expression
-      db <- db[!is.na(db[, "Package"]), ]
-      db <- as.data.frame(db)
-      met <- convert(class_package_matrix(metric_db), class_metric_data_frame)
-      met$Metric <- TRUE
+      if (!is.na(metric_db)) {
+        # build our evaluation environemnt and evaluate filter expression
+        db <- db[!is.na(db[, "Package"]), ]
+        db <- as.data.frame(db)
+        met <- convert(class_package_matrix(metric_db), class_metric_data_frame)
+        met$Metric <- TRUE
 
-      db <- merge(db, met, by = c("Package", "Version", "MD5sum"), all = TRUE)
-      rownames(db) <- db[, "Package"]
+        db <- merge(db, met, by = c("Package", "Version", "MD5sum"), all = TRUE)
+        rownames(db) <- db[, "Package"]
+        defaults <- metric_defaults()
+      } else {
+        defaults <- NA
+        db <- as.data.frame(db)
+      }
 
       # evaluate filter
-      envir <- build_filter_envir(values = db, envir = envir)
+      envir <- build_filter_envir(
+        values = db,
+        envir = envir,
+        defaults = defaults
+      )
+
       db$Include <- eval(cond, envir = envir)
       db$Exception[db$Package %in% exceptions] <- "allow list"
 
@@ -124,10 +137,17 @@ build_filter_envir <- function(
   defaults = metric_defaults(),
   envir = parent.frame()
 ) {
-  defaults_envir <- with(defaults, environment())
-  parent.env(defaults_envir) <- envir
+  if (is.matrix(values)) {
+    values <- as.data.frame(values)
+  }
   value_envir <- with(values, environment())
-  parent.env(value_envir) <- defaults_envir
+  if (!is.na(defaults)) {
+    defaults_envir <- with(defaults, environment())
+    parent.env(defaults_envir) <- envir
+    parent.env(value_envir) <- defaults_envir
+  }  else {
+    parent.env(value_envir) <- envir
+  }
   value_envir
 }
 
@@ -178,7 +198,14 @@ available_metric_fields <- function(repos = getOption("repos")) {
 
 #' @importFrom val.meter class_package_matrix class_metric_data_frame
 available_metrics <- function(repos = opt("repos")) {
+  if (!length(repos)) {
+    return(NA_character_)
+  }
+
   is_metric_db <- vlapply(repos, repo_is_metric_db)
+  if (!length(is_metric_db)) {
+    return(NA_character_)
+  }
   db <- available.packages(
     repos = repos[is_metric_db],
     fields = available_metric_fields(repos = repos),
@@ -188,3 +215,5 @@ available_metrics <- function(repos = opt("repos")) {
   # drop rows with missing Package field (used to drop `Format: ` header)
   db[!is.na(db[, "Package"]), ]
 }
+
+

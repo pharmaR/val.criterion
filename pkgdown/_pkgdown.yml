@@ -67,6 +67,13 @@ reference:
       - package_filter
 
   - title: >
+      Available filters
+    desc: >
+      A selection of ready-made filters
+  - contents:
+      - cooldown
+
+  - title: >
       Actions
     desc: >
       Behaviors to apply when packages fail to meet the expressed criteria.
