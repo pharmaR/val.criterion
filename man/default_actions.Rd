@@ -9,3 +9,10 @@ default_actions()
 \description{
 A default set of package tools to impose actions upon
 }
+\seealso{
+Other actions: 
+\code{\link{action_disallow}()},
+\code{\link{last_rejected}()},
+\code{\link{last_rejected_permit}()}
+}
+\concept{actions}

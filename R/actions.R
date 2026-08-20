@@ -1,4 +1,6 @@
 #' A default set of package tools to impose actions upon
+#'
+#' @family actions
 #' @export
 default_actions <- function() {
   x <- list(
@@ -45,11 +47,17 @@ set_last_rejected <- function(pkgs) {
   last$rejected <- pkgs
 }
 
+#' Retrieve the last package rejection, imposed by a criteria
+#' 
+#' @family actions
 #' @export
 last_rejected <- function() {
   last$rejected
 }
 
+#' Permit the last package rejection
+#'
+#' @family actions
 #' @export
 last_rejected_permit <- function(quiet = FALSE) {
   new_exceptions <- setdiff(last_rejected(), opt("exceptions"))
@@ -65,6 +73,8 @@ last_rejected_permit <- function(quiet = FALSE) {
 }
 
 #' Disallow an action
+#'
+#' @family actions
 #' @export
 action_disallow <- function(pkgs, db, envir = parent.frame()) {
   pkgs_deps <- unlist(tools::package_dependencies(
