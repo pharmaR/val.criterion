@@ -2,12 +2,19 @@
 % Please edit documentation in R/actions.R
 \name{default_actions}
 \alias{default_actions}
-\title{A default set of package tools to impose actions upon}
+\title{Default actions}
 \usage{
 default_actions()
 }
+\value{
+A \code{data.frame} with three columns: functions, arguments and actions.
+}
 \description{
-A default set of package tools to impose actions upon
+Decide what to do when some functions are called.
+}
+\examples{
+df <- default_actions()
+
 }
 \seealso{
 Other actions: 

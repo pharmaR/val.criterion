@@ -1,4 +1,10 @@
-#' A default set of package tools to impose actions upon
+#' Default actions
+#'
+#' Decide what to do when some functions are called.
+#'
+#' @returns A `data.frame` with three columns: functions, arguments and actions.
+#' @examples
+#' df <- default_actions()
 #'
 #' @family actions
 #' @export
