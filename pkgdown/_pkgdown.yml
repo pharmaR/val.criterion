@@ -71,7 +71,8 @@ reference:
     desc: >
       Behaviors to apply when packages fail to meet the expressed criteria.
   - contents:
-      - starts_with("action_")
+      - default_actions
+      - action_disallow
       - last_rejected
       - last_rejected_permit
 

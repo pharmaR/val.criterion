@@ -1,3 +1,5 @@
+#' A default set of package tools to impose actions upon
+#' @export
 default_actions <- function() {
   x <- list(
     list(
