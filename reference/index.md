@@ -20,7 +20,7 @@ A selection of ready-made filters
 Behaviors to apply when packages fail to meet the expressed criteria.
 
 - [`default_actions()`](https://pharmar.github.io/val.criterion/reference/default_actions.md)
-  : A default set of package tools to impose actions upon
+  : Default actions
 - [`action_disallow()`](https://pharmar.github.io/val.criterion/reference/action_disallow.md)
   : Disallow an action
 - [`last_rejected()`](https://pharmar.github.io/val.criterion/reference/last_rejected.md)
