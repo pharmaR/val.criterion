@@ -60,6 +60,8 @@ package_filter <- local({
     add = TRUE,
     envir = parent.frame()
   ) {
+    force(envir)
+
     metric_db <- db
     cond <- substitute(cond)
 
@@ -76,14 +78,14 @@ package_filter <- local({
       # define NAs in case where metric_db is missing known metrics
       metric_defaults <- as.list(rep_len(NA, length.out = length(metrics())))
       names(metric_defaults) <- names(metrics())
-      
+
       if (!is.na(metric_db)) {
         # build our evaluation environemnt and evaluate filter expression
         db <- db[!is.na(db[, "Package"]), ]
         db <- as.data.frame(db)
         met <- convert(class_package_matrix(metric_db), class_metric_data_frame)
         met$Metric <- TRUE
-        
+
         db <- merge(db, met, by = c("Package", "Version", "MD5sum"), all = TRUE)
         rownames(db) <- db[, "Package"]
         defaults <- metric_defaults()
@@ -93,7 +95,12 @@ package_filter <- local({
       }
 
       # evaluate filter
-      envir <- build_filter_envir(values = db, envir = envir, defaults = defaults)
+      envir <- build_filter_envir(
+        values = db,
+        envir = envir,
+        defaults = defaults
+      )
+
       db$Include <- eval(cond, envir = envir)
       db$Exception[db$Package %in% exceptions] <- "allow list"
 
@@ -194,7 +201,7 @@ available_metrics <- function(repos = opt("repos")) {
   if (!length(repos)) {
     return(NA_character_)
   }
-  
+
   is_metric_db <- vlapply(repos, repo_is_metric_db)
   if (!length(is_metric_db)) {
     return(NA_character_)
@@ -208,3 +215,5 @@ available_metrics <- function(repos = opt("repos")) {
   # drop rows with missing Package field (used to drop `Format: ` header)
   db[!is.na(db[, "Package"]), ]
 }
+
+

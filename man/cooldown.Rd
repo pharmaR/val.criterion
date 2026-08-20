@@ -7,23 +7,31 @@
 cooldown(accepted = Sys.Date() - 2 * 7, ...)
 }
 \arguments{
-\item{accepted}{A date of some time in the past until which published packages are accepted.}
+\item{accepted}{A date of some time in the past until which published
+packages are accepted.}
 
-\item{...}{Other arguments passed to package_filter.}
+\item{...}{Other arguments passed to \code{\link{package_filter}}.}
 }
 \value{
-A filter
+A \code{\link{package_filter}}
 }
 \description{
-Implement a cooldown filter so that only packages that are older than a given threshold are installed.
+Implement a cooldown filter so that only packages that are older than a given
+threshold are installed.
 }
 \details{
-This helps to prevent installing packages recently published with a bug or an infiltration.
-For the same reason it prevents installing updates and patches of recently fixed packages.
+This helps to prevent installing packages recently published with a bug or an
+infiltration. For the same reason it prevents installing updates and patches
+of recently fixed packages.
 }
 \examples{
-ap_wo <- available.packages()
-dim(ap_wo)
-ap <- available.packages(filters = cooldown())
-dim(ap)
+# entire available packages set
+ap_complete <- available.packages()
+nrow(ap_complete)
+
+# available packages with cooldown filter applied
+ap <- available.packages(fields = "Published", filters = cooldown())
+ap <- subset(as.data.frame(ap), as.logical(Include))
+nrow(ap)
+
 }
