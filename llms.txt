@@ -84,6 +84,13 @@ criteria.
 - [`package_filter()`](https://pharmar.github.io/val.criterion/reference/package_filter.md)
   : Create a Package Filter
 
+## Available filters
+
+A selection of ready-made filters
+
+- [`cooldown()`](https://pharmar.github.io/val.criterion/reference/cooldown.md)
+  : Filter by date
+
 ## Actions
 
 Behaviors to apply when packages fail to meet the expressed criteria.
