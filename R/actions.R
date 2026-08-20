@@ -64,6 +64,7 @@ last_rejected_permit <- function(quiet = FALSE) {
   invisible(new_exceptions)
 }
 
+#' Disallow an action
 #' @export
 action_disallow <- function(pkgs, db, envir = parent.frame()) {
   pkgs_deps <- unlist(tools::package_dependencies(
