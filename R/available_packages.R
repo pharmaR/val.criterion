@@ -79,7 +79,7 @@ package_filter <- local({
       metric_defaults <- as.list(rep_len(NA, length.out = length(metrics())))
       names(metric_defaults) <- names(metrics())
 
-      if (!is.na(metric_db)) {
+      if (is.matrix(metric_db)) {
         # build our evaluation environemnt and evaluate filter expression
         db <- db[!is.na(db[, "Package"]), ]
         db <- as.data.frame(db)
@@ -141,7 +141,7 @@ build_filter_envir <- function(
     values <- as.data.frame(values)
   }
   value_envir <- with(values, environment())
-  if (!is.na(defaults)) {
+  if (is.list(defaults)) {
     defaults_envir <- with(defaults, environment())
     parent.env(defaults_envir) <- envir
     parent.env(value_envir) <- defaults_envir

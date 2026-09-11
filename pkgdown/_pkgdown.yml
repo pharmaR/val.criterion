@@ -72,6 +72,7 @@ reference:
       A selection of ready-made filters
   - contents:
       - cooldown
+      - percentile
 
   - title: >
       Actions
