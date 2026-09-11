@@ -1,0 +1,202 @@
+---
+title: "Supplementing a Metric Repository"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Supplementing a Metric Repository}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(val.criterion)
+library(val.meter)
+```
+
+A common question from organizations evaluating `val.criterion` is whether they
+can mix in metrics of their *own* -- for example, an internal notion of a
+"reputable" maintainer, or a bespoke security score -- alongside the metrics
+published by the R Validation Hub. They can, and this vignette walks through the
+three moving parts:
+
+1. **registering** a new metric so `val.meter` knows its name and type,
+2. **publishing** its values in a supplementary `PACKAGES` file, and
+3. **filtering** on a mix of criteria drawn from two separate metric
+   repositories.
+
+Throughout, we simulate everything locally with `val.meter::random_repo()` so
+the example runs offline.
+
+## Registering a new metric
+
+Metrics live in `val.meter`. Filtering by a metric requires that the metric be
+*registered*, because `val.criterion` uses the metric's declared type to
+interpret the character values stored in a `PACKAGES` file (every value in a
+repository index is stored as text). An unregistered field has no known type and
+cannot be coerced reliably.
+
+We register metrics with `val.meter::impl_data(metric = TRUE)`. The
+[*Adding a Metric*](https://pharmar.github.io/val.meter/articles/adding-metric.html)
+vignette in `val.meter` covers this in depth; here we add a small
+`reputable_maintainer` metric that flags packages for which the *R Validation
+Hub* is a copyright holder.
+
+```{r}
+impl_data(
+  "reputable_maintainer",
+  title = "Reputable Maintainer",
+  metric = TRUE,
+  class = S7::class_logical,
+  function(pkg, resource, field, ...) {
+    authors <- pkg$desc$get_authors()
+    any(vapply(
+      authors,
+      function(a) "cph" %in% a$role &&
+        grepl("R Validation Hub", paste(a$given, a$family)),
+      logical(1)
+    ))
+  }
+)
+```
+
+Once registered, the metric shows up alongside the built-in metrics:
+
+```{r}
+"reputable_maintainer" %in% names(metrics())
+```
+
+## Simulating an upstream metric repository
+
+A metric repository is an ordinary CRAN-style repository whose
+`src/contrib/PACKAGES` file is tagged `Format: Metrics` and carries one
+`Metric/<field>@R:` entry per metric. `val.meter::random_repo()` writes one for
+us -- standing in for the metrics an organization might consume from the R
+Validation Hub. We'll call it `valor`.
+
+```{r, warning = FALSE}
+set.seed(1)
+valor <- random_repo(n = 8)
+```
+
+Reading its index shows the metric columns we can filter on:
+
+```{r}
+valor_url <- file.path(sub("^file://", "", valor), "src", "contrib", "PACKAGES")
+base_db <- read.dcf(valor_url)
+base_db <- base_db[!is.na(base_db[, "Package"]), , drop = FALSE]
+
+grep("^Metric/", colnames(base_db), value = TRUE)
+```
+
+## Building a supplementary `PACKAGES` file
+
+Now suppose "acme" -- our organization -- wants to contribute its own
+`reputable_maintainer` assessment without touching the upstream repository. We
+publish a *second* metric repository containing only our metric.
+
+The one rule that makes the two repositories joinable is that each record must
+reuse the upstream `Package`, `Version` and `MD5sum` -- those three fields are
+the join key. A supplementary repository omits the package metrics it does not
+provide and lists only its own.
+
+```{r}
+acme_dir <- tempfile("acme")
+dir.create(file.path(acme_dir, "src", "contrib"), recursive = TRUE)
+
+set.seed(42)
+records <- c("Format: Metrics", "")
+for (i in seq_len(nrow(base_db))) {
+  records <- c(
+    records,
+    paste0("Package: ", base_db[i, "Package"]),
+    paste0("Version: ", base_db[i, "Version"]),
+    paste0("MD5sum: ",  base_db[i, "MD5sum"]),
+    # simulate acme's assessment for the demo
+    paste0("Metric/reputable_maintainer@R: ", sample(c("TRUE", "FALSE"), 1)),
+    ""
+  )
+}
+writeLines(records, file.path(acme_dir, "src", "contrib", "PACKAGES"))
+acme <- paste0("file://", acme_dir)
+```
+
+The result is a minimal, valid metric repository:
+
+```{r}
+cat(readLines(file.path(acme_dir, "src", "contrib", "PACKAGES"), n = 7), sep = "\n")
+```
+
+## Filtering on metrics from two repositories
+
+Each metric repository reduces to an `available.packages()`-style matrix. A
+small helper reads one, keeping only the metric columns:
+
+```{r}
+read_metrics <- function(repo) {
+  url <- file.path(sub("^file://", "", repo), "src", "contrib", "PACKAGES")
+  fields <- grep("^Metric/", colnames(read.dcf(url)), value = TRUE)
+  db <- available.packages(repos = repo, fields = fields, filters = list())
+  db[!is.na(db[, "Package"]), , drop = FALSE]
+}
+```
+
+To filter on metrics from both repositories at once, join them on the
+`Package`/`Version`/`MD5sum` key into a single metric matrix. This gives every
+package a `downloads_total` column (from `valor`) *and* a
+`reputable_maintainer` column (from `acme`):
+
+```{r}
+combined <- merge(
+  read_metrics(valor),
+  read_metrics(acme),
+  by = c("Package", "Version", "MD5sum"),
+  all = TRUE
+)
+
+grep("downloads_total|reputable_maintainer", colnames(combined), value = TRUE)
+```
+
+`package_filter()` accepts a `db` argument -- a function returning the metric
+matrix to filter against -- so we hand it our combined matrix. The filter
+expression then references metrics from either repository by name, as flat
+variables:
+
+```{r}
+options(
+  repos = valor,
+  available_packages_filters = package_filter(
+    {
+      # passes R CMD check *and* is maintained by a reputable org
+      r_cmd_check_error_count == 0 & reputable_maintainer
+    },
+    db = function() as.matrix(combined)
+  )
+)
+```
+
+With the filter installed, base R's `available.packages()` transparently drops
+packages that fail the policy -- their `Repository` is rewritten to
+`"<filtered>"`:
+
+```{r}
+pkgs <- available.packages()
+pkgs[, c("Package", "Repository")]
+```
+
+`install.packages()` honours the same filter, so a package excluded by policy
+cannot be installed through the normal workflow.
+
+## A note on joining repositories
+
+`val.criterion` reads the repositories in `options("val.criterion.repos")` by
+row-binding their indices, which does not by itself *column-join* two
+repositories that describe the same packages with different metrics. Until
+native joining is available, supply the joined matrix explicitly through the
+`db` argument, as shown above. The join key is always
+`c("Package", "Version", "MD5sum")`.
