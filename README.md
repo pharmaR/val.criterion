@@ -1,5 +1,8 @@
 # `val.criterion`
 
+[Documentation](https://pharmar.github.io/val.criterion/) ·
+[R Validation Hub](https://pharmar.org/)
+
 ## Installation
 
 ``` r
